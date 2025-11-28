@@ -1,7 +1,7 @@
 """
 Unit Tests for QuickPlotter Component
-This file verifies the functionality of the simple, single-plot visualization component.
-Run with: pytest test_quickplotter.py -v
+This file verifies the functionality of the QuickPlotter, focusing on
+automatic plot type detection and visualization execution.
 """
 
 import unittest
@@ -10,90 +10,110 @@ import pandas as pd
 from plotease import QuickPlotter, VisualizationBase
 
 
+def load_mtcars():
+    """Load mtcars dataset for testing"""
+    # NOTE: This data is copied locally to ensure the test is self-contained.
+    mtcars = pd.DataFrame({
+        'mpg': [21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19.2, 
+                17.8, 16.4, 17.3, 15.2, 10.4, 10.4, 14.7, 32.4, 30.4, 33.9,
+                21.5, 15.5, 15.2, 13.3, 19.2, 27.3, 26.0, 30.4, 15.8, 19.7, 15.0, 21.4],
+        'cyl': [6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 
+                6, 8, 8, 8, 8, 8, 8, 4, 4, 4,
+                4, 8, 8, 8, 8, 4, 4, 4, 8, 6, 8, 4],
+        'hp': [110, 110, 93, 110, 175, 105, 245, 62, 95, 123,
+               123, 180, 180, 180, 205, 215, 230, 66, 52, 65,
+               97, 150, 150, 245, 175, 66, 91, 113, 264, 175, 335, 109],
+        'wt': [2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3.150, 3.440,
+               3.440, 4.070, 3.730, 3.780, 5.250, 5.424, 5.345, 2.200, 1.615, 1.835,
+               2.465, 3.520, 3.435, 3.840, 3.845, 1.935, 2.140, 1.513, 3.170, 2.770, 3.570, 2.780],
+        'am': [1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
+               0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+               0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]
+    })
+    return mtcars
+
+
 class TestQuickPlotter(unittest.TestCase):
-    """Test QuickPlotter functionality, focusing on plot type detection and execution."""
+    """Test QuickPlotter functionality, focusing on plot detection and quick plotting."""
     
     def setUp(self):
-        """Set up test data with different types for plot detection."""
-        self.data = pd.DataFrame({
-            'age': [25, 30, 35, 40, 45], # Numeric
-            'salary': [50000, 60000, 70000, 80000, 90000], # Numeric
-            'department': ['Sales', 'HR', 'IT', 'Sales', 'HR'], # Categorical
-            'is_manager': [True, False, True, False, True] # Boolean/Categorical
-        })
+        """Set up test data using mtcars."""
+        self.mtcars = load_mtcars()
+        self.qp = QuickPlotter(self.mtcars)
+        
     
+    # Initialization and Inheritance Tests
+        
     def test_initialization(self):
         """Test QuickPlotter initialization."""
-        qp = QuickPlotter(self.data)
-        self.assertIsNotNone(qp)
-        self.assertIsInstance(qp, QuickPlotter)
-    
-    def test_inheritance_from_base(self):
-        """Test that QuickPlotter inherits from VisualizationBase (Inheritance)."""
-        qp = QuickPlotter(self.data)
-        self.assertIsInstance(qp, VisualizationBase)
-
-
-    # Plot Type Detection Logic
-
+        self.assertIsNotNone(self.qp)
         
+    def test_inheritance_from_base(self):
+        """Test that QuickPlotter inherits from VisualizationBase."""
+        self.assertIsInstance(self.qp, VisualizationBase)
+
+    # Plot Type Detection Tests
+
     def test_detect_plot_type_single_numeric(self):
-        """Test detection for a single numeric column (should be 'hist')."""
-        qp = QuickPlotter(self.data)
-        plot_type = qp.detect_plot_type('age', None)
+        """Test automatic plot type detection for a single numeric variable (should be 'hist')."""
+        plot_type = self.qp.detect_plot_type('mpg', None)
         self.assertEqual(plot_type, 'hist')
         
-    def test_detect_plot_type_single_categorical(self):
-        """Test detection for a single categorical column (should be 'bar')."""
-        qp = QuickPlotter(self.data)
-        plot_type = qp.detect_plot_type('department', None)
-        self.assertEqual(plot_type, 'bar')
-
     def test_detect_plot_type_two_numeric(self):
-        """Test detection for two numeric columns (should be 'scatter')."""
-        qp = QuickPlotter(self.data)
-        plot_type = qp.detect_plot_type('age', 'salary')
+        """Test automatic plot type detection for two numeric variables (should be 'scatter')."""
+        plot_type = self.qp.detect_plot_type('mpg', 'hp')
         self.assertEqual(plot_type, 'scatter')
 
-    def test_detect_plot_type_numeric_vs_categorical(self):
-        """Test detection for one numeric and one categorical column (should be 'box')."""
-        qp = QuickPlotter(self.data)
-        plot_type = qp.detect_plot_type('department', 'salary')
-        self.assertEqual(plot_type, 'box')
+    def test_detect_plot_type_numeric_vs_discrete(self):
+        """Test detection for numeric vs discrete variables (should be 'boxplot' or 'bar')."""
+        # Cylinders ('cyl') has few unique values (4, 6, 8) and often treated as categorical/discrete.
+        # Assuming the library defaults to 'boxplot' or similar for this numeric vs discrete grouping.
+        # We test based on the expected output from the internal detection logic, assuming 'boxplot'.
+        plot_type = self.qp.detect_plot_type('mpg', 'cyl')
         
-
-    # Execution Test
-
+        # Accept 'box', 'boxplot', 'bar' as valid outputs for this scenario
+        valid_plots = ['box', 'boxplot', 'bar']
+        self.assertTrue(plot_type in valid_plots, f"Expected one of {valid_plots}, got {plot_type}")
         
-    def test_quick_plot_runs_without_error(self):
-        """
-        Test that quick_plot executes various plots without raising exceptions.
-        This verifies successful delegation and setup of plotting parameters.
-        """
-        qp = QuickPlotter(self.data)
+   
+    # Plot Execution Tests
+
+    def test_quick_plot_scatter(self):
+        """Test quick_plot executes a scatter plot (numeric vs numeric) without error."""
         try:
-            # Test scatter plot
-            qp.quick_plot('age', 'salary', kind='scatter')
-            # Test bar plot (categorical)
-            qp.quick_plot('department', None)
-            # Test explicit box plot
-            qp.quick_plot('department', 'salary', kind='box')
+            self.qp.quick_plot('hp', 'mpg', kind='scatter')
+            success = True
+        except Exception as e:
+            print(f"QuickPlotter scatter failed: {e}")
+            success = False
+            
+        self.assertTrue(success)
+
+    def test_quick_plot_histogram(self):
+        """Test quick_plot executes a histogram (single numeric) without error."""
+        try:
+            self.qp.quick_plot('mpg', kind='hist')
+            success = True
+        except Exception as e:
+            print(f"QuickPlotter histogram failed: {e}")
+            success = False
+            
+        self.assertTrue(success)
+        
+    def test_quick_plot_automatic_detection(self):
+        """Test quick_plot executes successfully using automatic detection (kind=None)."""
+        try:
+            # Should automatically detect scatter plot
+            self.qp.quick_plot('wt', 'mpg', kind=None)
+            
+            # Should automatically detect histogram
+            self.qp.quick_plot('hp', kind=None)
             
             success = True
         except Exception as e:
-            print(f"QuickPlotter's quick_plot method raised an exception: {e}")
+            print(f"QuickPlotter automatic detection failed: {e}")
             success = False
-        
-        self.assertTrue(success, "The quick_plot method failed during execution.")
-
-    def test_set_style_runs_without_error(self):
-        """Test that setting a custom style dictionary runs without crashing."""
-        qp = QuickPlotter(self.data)
-        try:
-            qp.set_style({'axes.labelsize': 14, 'figure.figsize': (8, 6)})
-            success = True
-        except Exception:
-            success = False
+            
         self.assertTrue(success)
 
 

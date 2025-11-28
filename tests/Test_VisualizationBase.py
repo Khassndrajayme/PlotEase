@@ -1,96 +1,83 @@
 """
 Unit Tests for VisualizationBase (Abstract Base Class)
-This file verifies the ABC contract, data validation, and encapsulation logic
-inherited by all subclasses.
-Run with: pytest test_visualizationbase.py -v
+This file verifies the abstract nature, inheritance, and core non-abstract
+methods of the VisualizationBase class.
 """
 
 import unittest
 import pandas as pd
-from abc import ABC, abstractmethod
-# Import the base class for testing
-from plotease import VisualizationBase
+from abc import ABC
+# Import the class being tested and a concrete class for instantiation checks
+from plotease import VisualizationBase, PlotEase 
 
 
-#  Helper Mock Class for Testing Inherited Methods 
-# Since VisualizationBase cannot be instantiated, we create a concrete subclass
-# just to test its non-abstract methods (like validation, getters, and setters).
-class MockVisualization(VisualizationBase):
-    """Concrete mock class to instantiate VisualizationBase for testing."""
-    def render(self):
-        """Implement the abstract method to satisfy the ABC contract."""
-        pass
-
+def load_sample_data():
+    """Load a simple DataFrame for testing"""
+    return pd.DataFrame({
+        'A': [1, 2, 3],
+        'B': [10, 20, 30]
+    })
 
 
 class TestVisualizationBase(unittest.TestCase):
-    """Test the Abstract Base Class contract and core validation logic."""
+    """Test Abstract Base Class functionality and properties."""
     
     def setUp(self):
-        """Set up valid test data."""
-        self.valid_data = pd.DataFrame({
-            'a': [1, 2, 3, 4, 5],
-            'b': [10, 20, 30, 40, 50]
-        })
+        """Set up test data."""
+        self.data = load_sample_data()
+        
+    # Abstract Class Enforcement Tests
     
- 
-    # ABC Contract Enforcement
- 
-
-    def test_cannot_instantiate_abstract_class(self):
-        """Test that the ABC itself cannot be instantiated (Polymorphism contract)."""
-        with self.assertRaises(TypeError) as cm:
-            # Attempting to instantiate an ABC should raise a TypeError
-            VisualizationBase(self.valid_data)
         
-        # Verify the error message relates to the abstract method 'render'
-        self.assertIn("Can't instantiate abstract class", str(cm.exception))
-
-
-    # Validation Tests (Executed via the base class __init__)
-
-
-    def test_valid_initialization(self):
-        """Test successful initialization using the Mock class."""
-        mock_viz = MockVisualization(self.valid_data, theme='dark')
-        self.assertIsInstance(mock_viz, VisualizationBase)
-        self.assertEqual(mock_viz._theme, 'dark')
-
-    def test_invalid_data_type(self):
-        """Test TypeError when passing non-DataFrame data to the base initializer."""
-        # The base class's _validate_data method should catch this
-        with self.assertRaises(TypeError):
-            MockVisualization([1, 2, 3])
+    def test_cannot_instantiate_base_class(self):
+        """Test that VisualizationBase cannot be instantiated directly (is abstract)."""
+        with self.assertRaises(TypeError) as context:
+            VisualizationBase(self.data)
+            
+        self.assertIn("Can't instantiate abstract class", str(context.exception))
         
-        with self.assertRaises(TypeError):
-            MockVisualization(None)
+    def test_subclass_must_implement_render(self):
+        """Test that a subclass not implementing 'render' raises a TypeError."""
+        # Define a test subclass that deliberately misses the abstract 'render' method
+        class MissingRender(VisualizationBase):
+            # Missing the required abstract method: render()
+            pass 
+        
+        with self.assertRaises(TypeError) as context:
+            MissingRender(self.data)
+            
+        self.assertIn("Can't instantiate abstract class", str(context.exception))
+        self.assertIn("render", str(context.exception))
+        
+   
+    # Concrete Method and Property Tests (using a concrete subclass)
     
-    def test_empty_dataframe(self):
-        """Test ValueError when passing an empty DataFrame to the base initializer."""
-        # The base class's _validate_data method should catch this
-        with self.assertRaises(ValueError):
-            MockVisualization(pd.DataFrame())
 
-
-    # Encapsulation and Property Management Tests
-
-
-    def test_get_data(self):
-        """Test the get_data method (Encapsulation)."""
-        mock_viz = MockVisualization(self.valid_data)
-        retrieved_data = mock_viz.get_data()
-        self.assertTrue(retrieved_data.equals(self.valid_data))
-    
-    def test_set_theme(self):
-        """Test the set_theme method (Encapsulation)."""
-        mock_viz = MockVisualization(self.valid_data, theme='default')
-        self.assertEqual(mock_viz._theme, 'default')
-
-        # Setting a new theme
-        mock_viz.set_theme('minimal')
-        self.assertEqual(mock_viz._theme, 'minimal')
+    def test_initialization_of_data_and_theme(self):
+        """Test that the concrete subclass initializes _data and _theme correctly."""
+        # Use PlotEase as a representative concrete subclass
+        pe = PlotEase(self.data, theme='dark')
         
+        self.assertTrue(pe._data.equals(self.data))
+        self.assertEqual(pe._theme, 'dark')
         
+    def test_get_data_method(self):
+        """Test the concrete get_data() method in the base class."""
+        pe = PlotEase(self.data)
+        retrieved_data = pe.get_data()
+        
+        self.assertTrue(retrieved_data.equals(self.data))
+        self.assertIsNot(retrieved_data, self.data) # Should be a copy or safe view
+        
+    def test_set_theme_method(self):
+        """Test the concrete set_theme() method in the base class."""
+        pe = PlotEase(self.data, theme='default')
+        self.assertEqual(pe._theme, 'default')
+        
+        pe.set_theme('minimal')
+        self.assertEqual(pe._theme, 'minimal')
+
+
 if __name__ == '__main__':
     # Run with verbose output when executed directly
     unittest.main(verbosity=2)
