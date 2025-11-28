@@ -51,13 +51,10 @@ class TestComposition(unittest.TestCase):
         # Delegation to SummaryGenerator: tabular_summary
         summary = pe.tabular_summary(style='numeric')
         
-        # Verify the delegated method ran and returned the expected type
+        # Verify the outside method ran and returned the expected type
         self.assertIsInstance(summary, pd.DataFrame)
         self.assertEqual(len(summary), 2)  # Should only return 'age' and 'salary'
         self.assertTrue('Mean' in summary.columns)
-
-    # NOTE: In a real test, you would also ideally mock the autoplot/quick_plot
-    # methods to ensure the delegation happens without relying on actual plot generation.
 
 
 if __name__ == '__main__':
