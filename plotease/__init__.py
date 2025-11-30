@@ -1,11 +1,12 @@
 # 1. Import all primary classes from their new modules 
 # The classes are imported relative to the current package ('.')
 
-from .visualization import VisualizationBase # From visualization.py
-from .summary import SummaryGenerator       # From summary.py
-from .diagnostic import DiagnosticPlotter   # From diagnostic.py
-from .quick_plotter import QuickPlotter     # From quick_plotter.py
-from .model_comp import ModelComparator     # From model_comp.py
+from .visualization import VisualizationBase
+from .plotease import PlotEase
+from .diagnostic import DiagnosticPlotter
+from .summary import SummaryGenerator
+from .model_comp import ModelComparator
+from .quick_plotter import QuickPlotter
 
 # The main user-facing facade class
 from .plotease import PlotEase              # From plotease.py 
