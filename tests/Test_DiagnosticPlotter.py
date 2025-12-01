@@ -32,57 +32,48 @@ def load_mtcars():
 
 
 class TestDiagnosticPlotter(unittest.TestCase):
-    """Test DiagnosticPlotter functionality, focusing on autoplot execution."""
+    """Test DiagnosticPlotter functionality"""
     
     def setUp(self):
-        """Set up test data using mtcars."""
+        """Set up test data - using mtcars"""
         self.mtcars = load_mtcars()
-        
+    
     def test_initialization(self):
-        """Test DiagnosticPlotter initialization."""
+        """Test DiagnosticPlotter initialization"""
         dp = DiagnosticPlotter(self.mtcars)
         self.assertIsNotNone(dp)
         self.assertIsInstance(dp, DiagnosticPlotter)
     
     def test_inheritance_from_base(self):
-        """Test that DiagnosticPlotter inherits from VisualizationBase."""
+        """Test that DiagnosticPlotter inherits from VisualizationBase"""
         dp = DiagnosticPlotter(self.mtcars)
         self.assertIsInstance(dp, VisualizationBase)
-        
+    
     def test_autoplot_runs_without_error(self):
-        """Test that autoplot executes without errors for a regression target ('mpg')."""
+        """Test that autoplot executes without errors"""
         dp = DiagnosticPlotter(self.mtcars)
         try:
-            # Test autoplot with 'mpg' as the target variable
+            # Test autoplot with mtcars target variable
             dp.autoplot(target='mpg', max_plots=6)
             success = True
-        except Exception as e:
-            print(f"DiagnosticPlotter's autoplot failed with error: {e}")
+        except Exception:
             success = False
-            
-        self.assertTrue(success, "Autoplot failed to execute for target 'mpg'.")
         
+        self.assertTrue(success)
+    
     def test_autoplot_with_different_targets(self):
-        """Test autoplot with different target variables to ensure robustness."""
+        """Test autoplot with different target variables from mtcars"""
         dp = DiagnosticPlotter(self.mtcars)
         
-        # Test with 'hp' (Horsepower)
-        try:
-            dp.autoplot(target='hp', max_plots=4)
-            success_hp = True
-        except Exception:
-            success_hp = False
-            
-        # Test with 'wt' (Weight)
-        try:
-            dp.autoplot(target='wt', max_plots=4)
-            success_wt = True
-        except Exception:
-            success_wt = False
-            
-        self.assertTrue(success_hp, "Autoplot failed to execute for target 'hp'.")
-        self.assertTrue(success_wt, "Autoplot failed to execute for target 'wt'.")
-
+        # Test with different mtcars columns
+        targets = ['mpg', 'hp', 'wt']
+        for target in targets:
+            try:
+                dp.autoplot(target=target, max_plots=4)
+                success = True
+            except Exception:
+                success = False
+            self.assertTrue(success, f"Failed with target={target}")
 
 if __name__ == '__main__':
     # Run with verbose output when executed directly
