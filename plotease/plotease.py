@@ -6,7 +6,8 @@ from typing import Optional, List, Dict
 from .visualization import VisualizationBase
 
 from .summary import SummaryGenerator
-from .quick_plotter import DiagnosticPlotter, QuickPlotter
+from .quick_plotter import QuickPlotter
+from .diagnostic import DiagnosticPlotter
 from .model_comp import ModelComparator
 
 
