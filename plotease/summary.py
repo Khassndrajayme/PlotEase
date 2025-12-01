@@ -1,104 +1,77 @@
 import pandas as pd
-import numpy as np 
-from typing import List, Dict 
+import numpy as np
+# Assuming VisualizationBase is correctly imported from .visualization
+from .visualization import VisualizationBase 
+from typing import Optional, List, Dict 
 
-class SummaryGenerator:
+class SummaryGenerator(VisualizationBase):
     """
-    Generates comprehensive data summaries.
+    Generates tabular data summaries (mean, median, missing, etc.).
+    Inherits from VisualizationBase.
+    """
     
-    Demonstrates: Encapsulation (using _data), Dunder Methods (__repr__, __len__).
-    """
-
-    def __init__(self, data: pd.DataFrame):
-        # Encapsulation: Use of a protected attribute for the DataFrame
-        self._data = data
-
-    def summarize_numeric(self) -> List[Dict]:
-        """Summarize numeric columns"""
-        summaries = []
-        # Use np.number to select all numeric dtypes
-        numeric_cols = self._data.select_dtypes(include=[np.number]).columns
-
-        for col in numeric_cols:
-            summary = {
-                'Column': col,
-                'Type': 'Numeric',
-                # NOTE: The code correctly uses the protected attribute self._data[col]
-                'Count': self._data[col].count(), 
-                'Missing': self._data[col].isnull().sum(),
-                'Missing %': f"{self._data[col].isnull().sum() / len(self._data) * 100:.1f}%",
-                'Mean': f"{self._data[col].mean():.2f}",
-                'Std': f"{self._data[col].std():.2f}",
-                'Min': f"{self._data[col].min():.2f}",
-                'Max': f"{self._data[col].max():.2f}",
-                'Unique': self._data[col].nunique()
-            }
-            summaries.append(summary)
-        return summaries
-
-    def summarize_categorical(self) -> List[Dict]:
-        """Summarize categorical columns"""
-        summaries = []
-        # Include 'object' (strings) and 'category' (explicitly casted)
-        categorical_cols = self._data.select_dtypes(include=['object', 'category']).columns
-
-        for col in categorical_cols:
-            # Safely get the mode (top value)
-            top_val = self._data[col].mode()[0] if not self._data[col].mode().empty else 'N/A'
-            
-            # Use value_counts() to safely get top frequency
-            value_counts = self._data[col].value_counts()
-            top_freq = value_counts.iloc[0] if not value_counts.empty else 0
-            
-            summary = {
-                'Column': col,
-                'Type': 'Categorical',
-                'Count': self._data[col].count(),
-                'Missing': self._data[col].isnull().sum(),
-                'Missing %': f"{self._data[col].isnull().sum() / len(self._data) * 100:.1f}%",
-                'Unique': self._data[col].nunique(),
-                'Top Value': str(top_val),
-                'Top Freq': top_freq
-            }
-            summaries.append(summary)
-        return summaries
-
+    # FIX: Add 'theme' to the __init__ method signature.
+    def __init__(self, data: pd.DataFrame, theme: str = 'default'): 
+        """
+        Initializes the SummaryGenerator.
+        
+        Args:
+            data: The pandas DataFrame.
+            theme: The visual theme string (passed to the base class).
+        """
+        # FIX: Pass both data and theme to the parent (VisualizationBase) constructor.
+        # This correctly handles the three arguments (self, data, theme).
+        super().__init__(data, theme) 
+    
     def tabular_summary(self, style: str = 'full') -> pd.DataFrame:
         """
-        Generate comprehensive tabular summary
-
-        Args:
-            style: 'full' (numeric & categorical), 'numeric', or 'categorical'
-
-        Returns:
-            DataFrame with summary statistics
+        Generates a comprehensive statistical summary of the data.
         """
-        summaries = []
+        df = self._data
+        
+        # Helper function to get summary stats for numeric columns
+        def get_numeric_summary(data: pd.DataFrame) -> pd.DataFrame:
+            stats = data.describe(include=[np.number]).T
+            stats['missing'] = data.isnull().sum()
+            stats['% missing'] = (stats['missing'] / len(data)) * 100
+            stats['skew'] = data.skew(numeric_only=True)
+            stats['kurtosis'] = data.kurtosis(numeric_only=True)
+            return stats[['count', 'missing', '% missing', 'mean', 'std', 'min', 'max', 'skew', 'kurtosis']]
 
-        if style in ['full', 'numeric']:
-            summaries.extend(self.summarize_numeric())
+        # Helper function to get summary stats for categorical columns
+        def get_categorical_summary(data: pd.DataFrame) -> pd.DataFrame:
+            stats = pd.DataFrame(data.dtypes, columns=['DType'])
+            stats['count'] = data.count()
+            stats['missing'] = data.isnull().sum()
+            stats['% missing'] = (stats['missing'] / len(data)) * 100
+            stats['unique'] = data.nunique()
+            stats['top_value'] = data.mode().iloc[0]
+            stats['top_freq'] = data.apply(lambda x: x.value_counts().max())
+            return stats[stats['DType'].astype(str).isin(['object', 'category'])]
 
-        if style in ['full', 'categorical']:
-            summaries.extend(self.summarize_categorical())
+        if style == 'numeric':
+            return get_numeric_summary(df)
+        elif style == 'categorical':
+            return get_categorical_summary(df)
+        elif style == 'full':
+            numeric_df = get_numeric_summary(df)
+            categorical_df = get_categorical_summary(df)
             
-        summary_df = pd.DataFrame(summaries) # FIX: Added missing assignment operator '='
+            # Use 'outer' join to keep all columns, filling NaNs where necessary
+            full_summary = pd.concat([numeric_df, categorical_df], axis=0, sort=True)
+            return full_summary.sort_index()
+        else:
+            raise ValueError(f"Unknown style '{style}'. Choose from 'full', 'numeric', or 'categorical'.")
 
-        print("\n" + "="*80)
-        print(f"DATASET SUMMARY - {style.upper()} VIEW")
-        print("="*80)
-        print(f"Total Rows: {len(self._data):,}")
-        # Calculate memory usage in MB
-        memory_mb = self._data.memory_usage(deep=True).sum() / 1024**2
-        print(f"Memory Usage: {memory_mb:.2f} MB")
-        print("="*80 + "\n")
-
-        return summary_df
-
-    # Dunder Methods
-    def __repr__(self) -> str:
-        """String representation: How the object looks when printed"""
-        return f"SummaryGenerator(rows={len(self._data)}, cols={len(self._data.columns)})"
-
-    def __len__(self) -> int:
-        """Return number of rows, allowing len(instance)"""
-        return len(self._data)
+    # Implementation of the abstract method (Polymorphism)
+    def render(self):
+        """
+        Implementation of the abstract method from VisualizationBase.
+        Renders the full tabular summary (prints it to the console).
+        """
+        print("\n📊 Comprehensive Data Summary:")
+        print("=" * 30)
+        # Delegate the actual work to the tabular_summary method
+        summary_df = self.tabular_summary(style='full')
+        print(summary_df.to_string())
+        print("=" * 30)
