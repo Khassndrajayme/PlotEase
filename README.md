@@ -50,7 +50,7 @@ pip install plotease
 
 ### From Source
 ```bash
-git clone https://github.com/yourusername/plotease.git
+git clone https://github.com/Khassndrajayme/plotease.git
 cd plotease
 pip install -e .
 ```
