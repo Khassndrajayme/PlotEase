@@ -3,7 +3,7 @@ import pandas as pd
 from typing import Optional, List, Dict
 
 # Import components from other files (assuming the structure recommended previously)
-from .base import VisualizationBase
+from .visualization import VisualizationBase
 
 from .summary import SummaryGenerator
 from .plotters import DiagnosticPlotter, QuickPlotter
