@@ -3,7 +3,6 @@ Unit Tests for Composition
 This file verifies that the PlotEase Facade class is composed of 
 and correctly delegates tasks to its specialized component classes.
 """
-
 import unittest
 import pandas as pd
 # Import all relevant classes to test their composition
