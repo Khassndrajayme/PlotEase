@@ -7,7 +7,7 @@ import unittest
 import pandas as pd
 from abc import ABC
 # Import the class being tested and a concrete class for instantiation checks
-from plotease import VisualizationBase, PlotEase 
+from plotease import VisualizationBase, PlotEase, DiagnosticPlotter 
 
 
 class TestVisualizationBase(unittest.TestCase):
