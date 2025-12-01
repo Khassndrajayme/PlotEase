@@ -3,7 +3,6 @@ Unit Tests for PlotEase Initialization and Data Validation
 This file verifies the core functionality of the PlotEase constructor, including
 data checks, theme setting, and basic encapsulation methods.
 """
-
 import unittest
 import pandas as pd
 # Import the main class for testing
