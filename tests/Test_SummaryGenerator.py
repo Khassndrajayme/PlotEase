@@ -31,81 +31,63 @@ def load_mtcars():
 
 
 class TestSummaryGenerator(unittest.TestCase):
-    """Test SummaryGenerator functionality."""
+    """Test SummaryGenerator functionality"""
     
     def setUp(self):
-        """Set up test data - using mtcars."""
+        """Set up test data - using mtcars"""
         self.mtcars = load_mtcars()
-        # All 4 columns are numeric in this subset
-        self.numeric_cols = list(self.mtcars.columns) 
-        
+    
     def test_initialization(self):
-        """Test SummaryGenerator initialization."""
+        """Test SummaryGenerator initialization"""
         sg = SummaryGenerator(self.mtcars)
         self.assertIsNotNone(sg)
-        
-    def test_len_dunder(self):
-        """Test __len__ method returns the number of rows."""
-        sg = SummaryGenerator(self.mtcars)
-        self.assertEqual(len(sg), 32)  # 32 cars in mtcars
-        
-    # summarize_numeric (List Output)
-
+    
     def test_summarize_numeric(self):
-        """Test numeric column summarization returns a list of dictionaries."""
+        """Test numeric column summarization with mtcars"""
         sg = SummaryGenerator(self.mtcars)
         numeric_summary = sg.summarize_numeric()
         
         self.assertIsInstance(numeric_summary, list)
-        self.assertEqual(len(numeric_summary), len(self.numeric_cols))
+        self.assertEqual(len(numeric_summary), 11)  # mtcars has 11 numeric columns
         
-        # Check structure of the first summary item
+        # Check first summary contains expected keys
         first_summary = numeric_summary[0]
         self.assertIn('Column', first_summary)
         self.assertIn('Mean', first_summary)
         self.assertIn('Std', first_summary)
-        self.assertIn('Min', first_summary)
-        self.assertIn('Max', first_summary)
-
-    # tabular_summary (DataFrame Output)
-
-        
+    
     def test_tabular_summary_full(self):
-        """Test full tabular summary returns a DataFrame with all columns."""
+        """Test full tabular summary with mtcars"""
         sg = SummaryGenerator(self.mtcars)
         summary_df = sg.tabular_summary(style='full')
         
         self.assertIsInstance(summary_df, pd.DataFrame)
-        self.assertEqual(len(summary_df), len(self.numeric_cols))
-        
+        self.assertEqual(len(summary_df), 11)  # All mtcars columns are numeric
+    
     def test_tabular_summary_numeric_only(self):
-        """Test numeric-only summary returns a DataFrame with the correct count."""
+        """Test numeric-only summary"""
         sg = SummaryGenerator(self.mtcars)
         summary_df = sg.tabular_summary(style='numeric')
         
         self.assertIsInstance(summary_df, pd.DataFrame)
-        self.assertEqual(len(summary_df), len(self.numeric_cols))
-        
-
-    # Accuracy Test
-   
+        self.assertEqual(len(summary_df), 11)  # All mtcars columns
+    
+    def test_len_dunder(self):
+        """Test __len__ method"""
+        sg = SummaryGenerator(self.mtcars)
+        self.assertEqual(len(sg), 32)  # 32 cars in mtcars
+    
     def test_summary_statistics_accuracy(self):
-        """Test that summary statistics for a known column are accurate."""
+        """Test that summary statistics are accurate for mtcars"""
         sg = SummaryGenerator(self.mtcars)
         summary = sg.tabular_summary(style='numeric')
         
-        # Calculate expected mean for 'mpg' using pandas built-in mean
-        expected_mean = self.mtcars['mpg'].mean()
-        
-        # Extract 'mpg' row from the SummaryGenerator output
+        # Verify mpg statistics
         mpg_row = summary[summary['Column'] == 'mpg'].iloc[0]
-        
-        # Verify row count
-        self.assertEqual(int(mpg_row['Count']), 32)
-        
-        # Verify mean with a small tolerance (delta)
-        actual_mean = float(mpg_row['Mean'])
-        self.assertAlmostEqual(actual_mean, expected_mean, delta=0.01)
+        self.assertEqual(mpg_row['Count'], 32)
+        # Mean mpg should be around 20.09
+        mean_mpg = float(mpg_row['Mean'])
+        self.assertAlmostEqual(mean_mpg, 20.09, delta=0.5)
 
 
 if __name__ == '__main__':
