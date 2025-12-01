@@ -28,7 +28,7 @@ from .model_comp import ModelComparator
 from .quick_plotter import QuickPlotter
 
 # Import utilities
-from .utils import utils
+from . import utils
 
 # Define what gets imported with "from plotease import *"
 __all__ = [
