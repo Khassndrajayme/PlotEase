@@ -1,5 +1,5 @@
 # PlotEase
-Our library addresses the common problem of complex coding processes required for data plotting and visualization. Many existing solutions demand extensive manual coding, creating a barrier for users who simply want to generate insightful plots quickly and efficiently. The library addresses the complex coding often needed for data plotting. We aim to solve this by providing a user-friendly library that makes plot creation more accessible, reducing the code needed for effective visualizations. 
+PlotEase is designed to reduce syntax complexity compared to matplotlib and ggplot, making data visualization accessible and intuitive. Built with Object-Oriented Programming principles, PlotEase provides powerful features with minimal code. 
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -7,7 +7,6 @@ Our library addresses the common problem of complex coding processes required fo
 
 ![PlotEase UML Class Diagram](PlotEase_UMLDiagram/PlotEase_UMLDiagram.png)
 
-_ _ _
 
 ## Features
 
@@ -43,7 +42,7 @@ Create beautiful plots with minimal syntax:
 
 ## Installation
 
-### From PyPI (Recommended)
+### From PyPI 
 ```bash
 pip install plotease
 ```
@@ -219,10 +218,10 @@ This project was developed as part of an Object-Oriented Programming course.
 ### Team Members
 
 - **[Khassandra Louise C. Jayme]** - Lead Developer - [GitHub](https://github.com/Khassndrajayme)
-- **[Team Member 2]** - Developer - [GitHub](https://github.com/Sheena06J)
-- **[Team Member 3]** - Developer - [GitHub](https://github.com/MysteriousHotdog)
-- **[Team Member 4]** - Developer - [GitHub](https://github.com/AllenKalbo)
-- **[Team Member 5]** - Developer - [GitHub](https://github.com/noryt-py)
+- **[Sheena Angela T. Janog]** - Developer - [GitHub](https://github.com/Sheena06J)
+- **[Xavier Neo Mahilum]** - Developer - [GitHub](https://github.com/MysteriousHotdog)
+- **[Allen Floro Ventura]** - Developer - [GitHub](https://github.com/AllenKalbo)
+- **[Genetyron Zamoranos]** - Developer - [GitHub](https://github.com/noryt-py)
 
 ### Acknowledgments
 
