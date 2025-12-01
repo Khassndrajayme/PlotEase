@@ -16,19 +16,36 @@ class QuickPlotter(VisualizationBase):
         self._style_config = {}  # Protected attribute for custom styles
         self._apply_theme()
     
-    def detect_plot_type(self, x: str, y: Optional[str]) -> str:
-        """Automatically detect appropriate plot type"""
-        if y is None:
-            # FIX: Using pd.api.types.is_numeric_dtype is more robust than [np.number]
-            if pd.api.types.is_numeric_dtype(self._data[x].dtype):
-                return 'hist'
-            else:
-                return 'bar'
+    def detect_plot_type(self, x: str, y: Optional[str] = None, data: pd.DataFrame = None) -> str:
+    # Use the internal data if none is provided
+    if data is None:
+        data = self._data 
+
+    # Case 1: Univariate (Single Column)
+    if y is None:
+        # Check if the variable is categorical (low unique count for large data, or object/category type)
+        is_categorical = (data[x].dtype in ['object', 'category']) or (data[x].nunique() < 20 and len(data) > 100)
+        
+        if is_categorical:
+            return 'bar' # For categorical distributions
         else:
-            if pd.api.types.is_numeric_dtype(self._data[x].dtype) and pd.api.types.is_numeric_dtype(self._data[y].dtype):
-                return 'scatter'
-            else:
-                return 'bar'
+            return 'hist' # For numeric distributions
+
+    # Case 2: Bivariate (Two Columns)
+    x_dtype = data[x].dtype
+    y_dtype = data[y].dtype
+    
+    # Check if both are numeric (and continuous)
+    if pd.api.types.is_numeric_dtype(x_dtype) and pd.api.types.is_numeric_dtype(y_dtype):
+        return 'scatter' # Numeric vs. Numeric (Scatter plot)
+    
+    # Check for Numeric vs. Discrete/Categorical (for the specific test failures)
+    # The test expects 'boxplot' or 'bar' for a continuous vs. discrete/categorical mix
+    if pd.api.types.is_numeric_dtype(x_dtype) and (y_dtype in ['object', 'category'] or data[y].nunique() < 10):
+        return 'boxplot'
+        
+    # Default to scatter or bar for other mixed types
+    return 'bar' # Default for mixed types (e.g., bar chart)
     
     def quick_plot(self, x: str, y: Optional[str] = None, 
                    kind: str = 'auto', 
