@@ -4,11 +4,11 @@ from .visualization import VisualizationBase
 from typing import Optional, List, Dict
 
 class SummaryGenerator(VisualizationBase):
-    """
-    Generates tabular data summaries (mean, median, missing, etc.).
+    """
+    Generates tabular data summaries (mean, median, missing, etc.).
     Inherits from VisualizationBase.
     """
-    
+
     def __init__(self, data: pd.DataFrame, theme: str = 'default'): 
         """
         Initializes the SummaryGenerator.
