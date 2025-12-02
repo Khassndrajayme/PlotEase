@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-# Assuming VisualizationBase is correctly imported from .visualization
 from .visualization import VisualizationBase 
 from typing import Optional, List, Dict 
 
@@ -10,7 +9,6 @@ class SummaryGenerator(VisualizationBase):
     Inherits from VisualizationBase.
     """
     
-    # FIX: Add 'theme' to the __init__ method signature.
     def __init__(self, data: pd.DataFrame, theme: str = 'default'): 
         """
         Initializes the SummaryGenerator.
@@ -28,8 +26,10 @@ class SummaryGenerator(VisualizationBase):
         df = self._data
         
         # Helper function to get summary stats for numeric columns
-        def summarize_numeric(self, data: pd.DataFrame) -> pd.DataFrame:
-            stats = data.describe(include=[np.number]).T
+        # FIX: Renamed to get_numeric_summary for consistency and removed 'self'
+        def get_numeric_summary(data: pd.DataFrame) -> pd.DataFrame:
+            # FIX: Used numeric_only=True on describe and skew/kurtosis for safety
+            stats = data.describe(include=[np.number], numeric_only=True).T 
             stats['missing'] = data.isnull().sum()
             stats['% missing'] = (stats['missing'] / len(data)) * 100
             stats['skew'] = data.skew(numeric_only=True)
@@ -38,50 +38,19 @@ class SummaryGenerator(VisualizationBase):
 
         # Helper function to get summary stats for categorical columns
         def get_categorical_summary(data: pd.DataFrame) -> pd.DataFrame:
-            stats = pd.DataFrame(data.dtypes, columns=['DType'])
-            stats['count'] = data.count()
-            stats['missing'] = data.isnull().sum()
+            # FIX: Included common non-numeric types
+            data_non_numeric = data.select_dtypes(exclude=[np.number, 'datetime'])
+            stats = pd.DataFrame(data_non_numeric.dtypes, columns=['DType'])
+            stats['count'] = data_non_numeric.count()
+            stats['missing'] = data_non_numeric.isnull().sum()
             stats['% missing'] = (stats['missing'] / len(data)) * 100
-            stats['unique'] = data.nunique()
-            stats['top_value'] = data.mode().iloc[0]
-            stats['top_freq'] = data.apply(lambda x: x.value_counts().max())
-            return stats[stats['DType'].astype(str).isin(['object', 'category'])]
+            stats['unique'] = data_non_numeric.nunique()
+            # Handle empty DataFrame case for mode/top_value
+            if not data_non_numeric.empty:
+                 stats['top_value'] = data_non_numeric.mode().iloc[0]
+                 stats['top_freq'] = data_non_numeric.apply(lambda x: x.value_counts().max() if not x.empty else 0)
+            else:
+                 stats['top_value'] = np.nan
+                 stats['top_freq'] = 0
 
-        if style == 'numeric':
-            return get_numeric_summary(df)
-        elif style == 'categorical':
-            return get_categorical_summary(df)
-        elif style == 'full':
-            numeric_df = get_numeric_summary(df)
-            categorical_df = get_categorical_summary(df)
-            
-            # Use 'outer' join to keep all columns, filling NaNs where necessary
-            full_summary = pd.concat([numeric_df, categorical_df], axis=0, sort=True)
-            return full_summary.sort_index()
-        else:
-            raise ValueError(f"Unknown style '{style}'. Choose from 'full', 'numeric', or 'categorical'.")
-
-        if style == 'full':
-            numeric_df = self.summarize_numeric(df) # <-- Assuming fix A applied
-            categorical_df = get_categorical_summary(df)
-            
-            # Combine the summaries
-            full_summary = pd.concat([numeric_df, categorical_df], axis=0, sort=True)
-            
-            # FIX: Reset the index (variable names) and rename the index column to 'Column'
-            full_summary = full_summary.reset_index().rename(columns={'index': 'Column'})
-            
-            return full_summary.sort_values(by='Column')
-
-    # Implementation of the abstract method (Polymorphism)
-    def render(self):
-        """
-        Implementation of the abstract method from VisualizationBase.
-        Renders the full tabular summary (prints it to the console).
-        """
-        print("Comprehensive Data Summary:")
-        print("=" * 30)
-        # Delegate the actual work to the tabular_summary method
-        summary_df = self.tabular_summary(style='full')
-        print(summary_df.to_string())
-        print("=" * 30)
+            # Only
